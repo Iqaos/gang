@@ -375,7 +375,24 @@ function chooseGait(distance) {
   return roll < 0.45 ? 'trot' : 'run';
 }
 
+/* Ferma il cane dove si trova in questo momento: la transizione in corso viene
+   annullata, così chi si addormenta non continua a scivolare verso la meta. */
+function stopWalking() {
+  clearTimeout(walkTimer);
+  walking = false;
+
+  const scene = el.scene.getBoundingClientRect();
+  const pet = el.pet.getBoundingClientRect();
+  placeX(pet.left - scene.left, false);
+}
+
 function walkTo(target, onArrive) {
+  // se dorme non si sposta: si alza solo con "Sveglia"
+  if (state.asleep) {
+    if (onArrive) onArrive();
+    return;
+  }
+
   const next = clampX(target);
   const distance = Math.abs(next - posX);
 
@@ -508,6 +525,7 @@ function play() {
 function sleep() {
   state.asleep = true;
   sitting = false;
+  stopWalking();
   setPose('sleep');
   say(pick(LINES.nanna), 2600);
   syncButtons();
@@ -571,9 +589,7 @@ function tick() {
     s.cibo = clamp(s.cibo - DECAY.cibo * 0.25);
     s.felicita = clamp(s.felicita - DECAY.felicita * 0.25);
 
-    if (s.energia >= 100) {
-      wake('Sono carico di energie! ⚡');
-    }
+    // dorme finché non lo si sveglia: a energia piena non si alza da solo
   } else {
     s.cibo = clamp(s.cibo - DECAY.cibo);
     s.felicita = clamp(s.felicita - DECAY.felicita);

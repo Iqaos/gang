@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Rocky — il cane sulla barra</title>
+  <meta name="theme-color" content="#12101a" />
+  <meta name="description" content="Rocky, un bovaro del Bernese a pixel che vive sulla barra: dagli da mangiare, coccolalo, gioca con lui e lascialo dormire." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.92em' font-size='88'>🐶</text></svg>" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="coat-bernese">
+
+  <main class="scene" id="scene">
+    <div class="pet" id="pet" data-facing="right" data-state="idle" style="--x:32px">
+      <div class="bubble" id="bubble" role="status" aria-live="polite">
+        <span id="bubbleText"></span>
+      </div>
+
+      <button class="pet__hit" id="petHit" type="button" aria-label="Coccola Rocky"></button>
+
+      <div class="pet__inner">
+        <svg class="pet__svg" id="petSvg" viewBox="0 0 240 160" aria-hidden="true" focusable="false"></svg>
+      </div>
+    </div>
+
+    <div class="fx" id="fx" aria-hidden="true"></div>
+    <div class="props" id="props" aria-hidden="true"></div>
+
+    <p class="hint" id="hint">Clicca il cane per una coccola<br />tasto destro per tutte le azioni</p>
+  </main>
+
+  <footer class="bar">
+    <div class="plate">
+      <span class="plate__paw" aria-hidden="true">🐾</span>
+      <span class="plate__name" id="dogName">Rocky</span>
+    </div>
+
+    <div class="stats" id="stats" aria-label="Come sta il cane">
+      <div class="stat" data-stat="cibo">
+        <span class="stat__icon" aria-hidden="true">🍖</span>
+        <span class="stat__name">Cibo</span>
+        <span class="stat__track"><span class="stat__fill" data-fill></span></span>
+        <span class="stat__value" data-value>0</span>
+      </div>
+      <div class="stat" data-stat="felicita">
+        <span class="stat__icon" aria-hidden="true">❤️</span>
+        <span class="stat__name">Felic.</span>
+        <span class="stat__track"><span class="stat__fill" data-fill></span></span>
+        <span class="stat__value" data-value>0</span>
+      </div>
+      <div class="stat" data-stat="energia">
+        <span class="stat__icon" aria-hidden="true">⚡</span>
+        <span class="stat__name">Energia</span>
+        <span class="stat__track"><span class="stat__fill" data-fill></span></span>
+        <span class="stat__value" data-value>0</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="act" type="button" data-action="cibo">
+        <span class="act__icon" aria-hidden="true">🍖</span><span class="act__label">Cibo</span>
+      </button>
+      <button class="act" type="button" data-action="coccole">
+        <span class="act__icon" aria-hidden="true">🖐️</span><span class="act__label">Coccole</span>
+      </button>
+      <button class="act" type="button" data-action="gioca">
+        <span class="act__icon" aria-hidden="true">🎾</span><span class="act__label">Gioca</span>
+      </button>
+      <button class="act" type="button" data-action="nanna">
+        <span class="act__icon" aria-hidden="true">💤</span><span class="act__label">Nanna</span>
+      </button>
+      <button class="act act--icon" type="button" id="btnSettings" aria-label="Impostazioni del cane">
+        <span class="act__icon" aria-hidden="true">⚙️</span>
+      </button>
+    </div>
+  </footer>
+
+  <div class="menu" id="contextMenu" role="menu" aria-label="Azioni per Rocky" tabindex="-1" hidden>
+    <button class="menu__item" type="button" role="menuitem" data-action="cibo">Cibo</button>
+    <button class="menu__item" type="button" role="menuitem" data-action="coccole">Coccole</button>
+    <button class="menu__item" type="button" role="menuitem" data-action="gioca">Gioca</button>
+    <button class="menu__item" type="button" role="menuitem" data-action="nanna" data-menu-sleep>Nanna</button>
+    <div class="menu__sep" role="separator"></div>
+    <button class="menu__item" type="button" role="menuitem" data-command="settings">Impostazioni</button>
+  </div>
+
+  <div class="sheet" id="sheet" hidden>
+    <div class="sheet__panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <h2 id="sheetTitle">Il tuo cane</h2>
+
+      <label class="field">
+        <span>Nome</span>
+        <input id="nameInput" type="text" maxlength="14" autocomplete="off" spellcheck="false" />
+      </label>
+
+      <fieldset class="coats">
+        <legend>Mantello</legend>
+        <label class="coat">
+          <input type="radio" name="coat" value="bernese" />
+          <span class="coat__swatch coat__swatch--bernese"></span><span>Bernese</span>
+        </label>
+        <label class="coat">
+          <input type="radio" name="coat" value="cioccolato" />
+          <span class="coat__swatch coat__swatch--cioccolato"></span><span>Cioccolato</span>
+        </label>
+        <label class="coat">
+          <input type="radio" name="coat" value="grigiofocato" />
+          <span class="coat__swatch coat__swatch--grigiofocato"></span><span>Grigio focato</span>
+        </label>
+      </fieldset>
+
+      <div class="sheet__actions">
+        <button class="btn" type="button" id="btnClose">Chiudi</button>
+        <button class="btn btn--primary" type="button" id="btnSave">Salva</button>
+      </div>
+    </div>
+  </div>
+
+  <script defer src="js/sprite.js"></script>
+  <script defer src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "rocky-pet",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Rocky, il bovaro del Bernese a pixel che vive sulla barra",
+  "main": "desktop/main.js",
+  "scripts": {
+    "start": "electron .",
+    "web": "python3 -m http.server 3000"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0"
+  }
+}

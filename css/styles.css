@@ -791,6 +791,9 @@ body.is-docked .hint { display: none; }
 body.is-docked .pet {
   width: 80px;
   left: 0;
+  /* sollevato dal fondo: poggia più in alto nella barra, non sul bordo dello
+     schermo (il valore arriva dalla finestra desktop) */
+  bottom: var(--dock-lift, 12px);
   transform: translateX(var(--x, 0px));
 }
 

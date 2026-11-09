@@ -13,6 +13,13 @@ const isDocked = new URLSearchParams(window.location.search).has('dock');
    prima della freccia "mostra desktop" in fondo alla barra. */
 const ARROW_MARGIN = 160;
 
+/* Di quanto il cane sta sollevato dal fondo della barra, in pixel: la finestra
+   desktop lo calcola dall'altezza della barra di sistema (?lift=...). */
+const dockLift = (() => {
+  const raw = Number(new URLSearchParams(window.location.search).get('lift'));
+  return Number.isFinite(raw) && raw >= 0 && raw <= 40 ? Math.round(raw) : 12;
+})();
+
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const clamp = (v, min = 0, max = 100) => Math.min(max, Math.max(min, v));
@@ -775,6 +782,7 @@ window.addEventListener('pagehide', save);
 
 function boot() {
   window.RockySprite.mountSprite(el.petSvg);
+  if (isDocked) document.body.style.setProperty('--dock-lift', `${dockLift}px`);
   renderIdentity();
   renderStats();
   updateMargin();

@@ -20,6 +20,11 @@ rispondono solo il cane, il suo menu e il pannello impostazioni. La finestra è 
 quanto lo schermo, così il cane **passeggia lungo la barra**: parte dal centro, va a
 destra e a sinistra per un po' e si ferma prima della freccia «mostra desktop».
 
+Il cane non poggia sul bordo dello schermo ma è sollevato di circa un quarto
+dell'altezza della barra, così sta dentro la barra quasi attaccato al bordo superiore:
+l'altezza della barra si ricava in `desktop/main.js` dalla differenza fra `bounds` e
+`workArea`, e arriva alla pagina come `?lift=` (12 px se non specificato).
+
 **Windows, il modo più semplice:** scarica lo ZIP (**Code → Download ZIP**), **estrailo**
 e fai doppio clic su `avvia-rocky.bat`: la prima volta installa le dipendenze da solo,
 poi avvia Rocky.

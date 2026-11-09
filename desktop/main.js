@@ -17,8 +17,14 @@ const HEIGHT = 176;
 function createWindow() {
   // `bounds` comprende la barra delle applicazioni, `workArea` no:
   // così il fondo della finestra coincide con il fondo dello schermo.
-  const { bounds } = screen.getPrimaryDisplay();
+  const { bounds, workArea } = screen.getPrimaryDisplay();
   const WIDTH = bounds.width;
+
+  // La differenza fra tutto lo schermo e l'area di lavoro è l'altezza della
+  // barra: serve per alzare il cane dentro la barra, quasi al bordo superiore,
+  // invece di lasciarlo appoggiato sul fondo dello schermo.
+  const taskbarHeight = Math.max(0, bounds.y + bounds.height - (workArea.y + workArea.height));
+  const lift = Math.max(6, Math.min(22, Math.round(taskbarHeight * 0.25)));
 
   const win = new BrowserWindow({
     width: WIDTH,
@@ -70,7 +76,9 @@ function createWindow() {
     target.setIgnoreMouseEvents(!inside, { forward: true });
   });
 
-  win.loadFile(path.join(__dirname, '..', 'index.html'), { query: { dock: '1' } });
+  win.loadFile(path.join(__dirname, '..', 'index.html'), {
+    query: { dock: '1', lift: String(lift) },
+  });
 
   return win;
 }

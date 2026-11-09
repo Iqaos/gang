@@ -16,8 +16,12 @@ const ARROW_MARGIN = 160;
 /* Di quanto il cane sta sollevato dal fondo della barra, in pixel: la finestra
    desktop lo calcola dall'altezza della barra di sistema (?lift=...). */
 const dockLift = (() => {
-  const raw = Number(new URLSearchParams(window.location.search).get('lift'));
-  return Number.isFinite(raw) && raw >= 0 && raw <= 40 ? Math.round(raw) : 12;
+  const raw = new URLSearchParams(window.location.search).get('lift');
+  // attenzione: Number(null) è 0, quindi il parametro assente va gestito prima
+  if (raw === null || raw.trim() === '') return 12;
+  const value = Number(raw);
+  if (!Number.isFinite(value)) return 12;
+  return Math.min(40, Math.max(0, Math.round(value)));
 })();
 
 const $ = (sel, root = document) => root.querySelector(sel);

@@ -52,6 +52,32 @@ terminale o con `Alt+F4`. Dimensioni e posizione si cambiano con `WIDTH`, `HEIGH
 calcolo di `x`/`y` in `desktop/main.js`: con `bounds` la finestra comprende la barra (è
 la posizione predefinita, così il cane ci finisce dentro), con `workArea` resta sopra.
 
+### Aggiornare il cane
+
+Se hai clonato con git, nella cartella del progetto:
+
+```powershell
+git pull
+npm.cmd start
+```
+
+Se invece hai estratto lo ZIP (dentro non c'è `.git`, quindi `git pull` risponde "not a
+git repository"): riscarica lo ZIP e copia i file sopra la cartella del progetto, senza
+toccare `node_modules`:
+
+```powershell
+cd $HOME\Downloads
+Expand-Archive .\gang-main.zip -DestinationPath $HOME\rocky-new -Force
+Copy-Item "$HOME\rocky-new\gang-main\*" "$HOME\Downloads\gang-main" -Recurse -Force
+cd $HOME\Downloads\gang-main
+npm.cmd start
+```
+
+Righe come `ERROR:cache_util_win.cc ... Accesso negato` o `Unable to create cache` non
+sono un problema del cane: succedono quando resta aperta una copia precedente (o ne
+partono due insieme) e Chromium non riesce a usare la cache. Ora l'app accetta una sola
+copia alla volta: chiudi le finestre vecchie con `Alt+F4` e riavvia.
+
 ### 2. Nel browser
 
 ```bash

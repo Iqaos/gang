@@ -62,12 +62,28 @@ function createWindow() {
   return win;
 }
 
-app.whenReady().then(createWindow);
+/* Una copia sola alla volta: due finestre insieme si contendono la cache di
+   Chromium e riempiono la console di errori "Unable to create cache". */
+const gotLock = app.requestSingleInstanceLock();
 
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
-});
-
-app.on('window-all-closed', () => {
+if (!gotLock) {
   app.quit();
-});
+} else {
+  app.on('second-instance', () => {
+    const [win] = BrowserWindow.getAllWindows();
+    if (!win) return;
+    if (win.isMinimized()) win.restore();
+    win.show();
+    win.focus();
+  });
+
+  app.whenReady().then(createWindow);
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+
+  app.on('window-all-closed', () => {
+    app.quit();
+  });
+}

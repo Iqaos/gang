@@ -168,6 +168,23 @@ Lo stato salvato:
 Altri punti da toccare: `DECAY` (velocità del decadimento) e `LINES` (battute del cane)
 in `js/app.js`.
 
+## Aggiornare Rocky
+
+Doppio clic su **`aggiorna-rocky.bat`**: fa `git pull`, sistema le dipendenze se
+mancano e riavvia il cane. Non serve aprire il terminale.
+
+Se la cartella non è un clone git (per esempio viene da uno ZIP), lo script te lo dice:
+in quel caso scarica lo ZIP aggiornato e copia i file sopra la cartella **lasciando stare
+`node_modules`**, poi doppio clic su `avvia-rocky.bat`.
+
+A mano, se preferisci il terminale:
+
+```bat
+cd %USERPROFILE%\rocky-app
+git pull
+npm.cmd start
+```
+
 ## Note
 
 - Il progetto rispetta `prefers-reduced-motion`: con le animazioni ridotte il cane resta

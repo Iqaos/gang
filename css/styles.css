@@ -837,6 +837,9 @@ body.is-docked .menu {
     3px 3px 0 rgba(0, 0, 0, .4);
 }
 
+/* la regola qui sopra imposta display: flex e batterebbe .menu[hidden] */
+body.is-docked .menu[hidden] { display: none; }
+
 body.is-docked .menu__item { gap: 4px; padding: 5px 6px; white-space: nowrap; }
 body.is-docked .menu__item::before { display: none; }
 body.is-docked .menu__sep { width: 2px; height: auto; margin: 2px 1px; }

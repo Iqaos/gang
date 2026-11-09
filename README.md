@@ -177,12 +177,19 @@ Se la cartella non è un clone git (per esempio viene da uno ZIP), lo script te 
 in quel caso scarica lo ZIP aggiornato e copia i file sopra la cartella **lasciando stare
 `node_modules`**, poi doppio clic su `avvia-rocky.bat`.
 
-A mano, se preferisci il terminale:
+A mano, se preferisci il terminale. In **PowerShell** (quello di default su Windows):
 
-```bat
-cd %USERPROFILE%\rocky-app
+```powershell
+cd $env:USERPROFILE\rocky-app
 git pull
 npm.cmd start
+```
+
+Nel **Prompt dei comandi** (`cmd`) le variabili usano i percentuali:
+
+```bat
+cd /d "%USERPROFILE%\rocky-app"
+git pull && npm.cmd start
 ```
 
 ## Note

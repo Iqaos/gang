@@ -13,6 +13,10 @@ const isDocked = new URLSearchParams(window.location.search).has('dock');
    prima della freccia "mostra desktop" in fondo alla barra. */
 const ARROW_MARGIN = 160;
 
+/* Il limite sinistro del passeggio: spostato a destra, così il cane non
+   finisce troppo vicino al lato sinistro della barra. */
+const DOCK_LEFT_SHIFT = 40;
+
 /* Di quanto il cane sta sollevato dal fondo della barra, in pixel: la finestra
    desktop lo calcola dall'altezza della barra di sistema (?lift=...). */
 const dockLift = (() => {
@@ -336,7 +340,7 @@ function dockRange() {
   const width = el.scene.clientWidth;
   const petWidth = el.pet.offsetWidth || 80;
   const center = Math.round((width - petWidth) / 2);
-  const min = Math.max(0, Math.round(center - width * 0.12));
+  const min = Math.max(0, Math.round(center - width * 0.12) + DOCK_LEFT_SHIFT);
   const max = Math.max(min, Math.round(width - petWidth - ARROW_MARGIN));
   return { min, max, center };
 }
@@ -356,6 +360,21 @@ function placeX(x, animate = false) {
   el.pet.style.setProperty('--x', `${posX}px`);
 }
 
+/* Tre andature, in pixel al secondo: il cane sceglie quella adatta alla
+   distanza, e il passo (velocità dei due frame) cambia con l'andatura. */
+const GAITS = {
+  walk: { speed: 30, frame: '.42s' },
+  trot: { speed: 60, frame: '.26s' },
+  run: { speed: 108, frame: '.16s' },
+};
+
+function chooseGait(distance) {
+  const roll = Math.random();
+  if (distance < 130) return roll < 0.72 ? 'walk' : 'trot';
+  if (distance < 320) return roll < 0.32 ? 'walk' : roll < 0.86 ? 'trot' : 'run';
+  return roll < 0.45 ? 'trot' : 'run';
+}
+
 function walkTo(target, onArrive) {
   const next = clampX(target);
   const distance = Math.abs(next - posX);
@@ -365,9 +384,13 @@ function walkTo(target, onArrive) {
     return;
   }
 
-  const duration = clamp(distance / 0.085, 650, 4200);
+  const gait = chooseGait(distance);
+  const conf = GAITS[gait];
+  const duration = clamp((distance / conf.speed) * 1000, 500, 12000);
   sitting = false;
 
+  el.pet.dataset.gait = gait;
+  el.pet.style.setProperty('--frame-dur', conf.frame);
   el.pet.style.setProperty('--walk-dur', `${duration}ms`);
   el.pet.dataset.facing = next > posX ? 'right' : 'left';
 

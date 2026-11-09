@@ -12,12 +12,14 @@
 <body class="coat-bernese">
 
   <main class="scene" id="scene">
-    <div class="pet" id="pet" data-facing="right" data-state="idle" style="--x:32px">
+    <div class="pet" id="pet" data-facing="right" data-state="idle" data-gait="walk" style="--x:32px">
       <div class="bubble" id="bubble" role="status" aria-live="polite">
         <span id="bubbleText"></span>
       </div>
 
       <button class="pet__hit" id="petHit" type="button" aria-label="Azioni per Rocky"></button>
+
+      <span class="pet__trail" aria-hidden="true"><i></i><i></i><i></i></span>
 
       <div class="pet__inner">
         <svg class="pet__svg" id="petSvg" viewBox="0 0 240 160" aria-hidden="true" focusable="false"></svg>

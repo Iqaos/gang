@@ -195,9 +195,10 @@ body::after {
 .pet[data-state="sit"] .pose--stand,
 .pet[data-state="sleep"] .pose--stand { display: none; }
 
-/* camminata a due frame: le zampe sono disegnate, non traslate */
-.pet[data-state="walk"] .pose--walk-a { display: block; animation: frameA .36s steps(1, end) infinite; }
-.pet[data-state="walk"] .pose--walk-b { display: block; animation: frameB .36s steps(1, end) infinite; }
+/* camminata a due frame: le zampe sono disegnate, non traslate.
+   --frame-dur cambia con l'andatura (passeggio, trotto, corsa). */
+.pet[data-state="walk"] .pose--walk-a { display: block; animation: frameA var(--frame-dur, .36s) steps(1, end) infinite; }
+.pet[data-state="walk"] .pose--walk-b { display: block; animation: frameB var(--frame-dur, .36s) steps(1, end) infinite; }
 
 .pet[data-state="sit"] .pose--sit { display: block; }
 .pet[data-state="sleep"] .pose--lie { display: block; }
@@ -211,7 +212,53 @@ body::after {
 .pet[data-state="sit"] .tail--b { animation-duration: 1.8s; }
 
 /* cammina: il passo è nei due frame, qui solo il sobbalzo del corpo */
-.pet[data-state="walk"] .pet__inner { animation: bob .36s steps(1, end) infinite; }
+.pet[data-state="walk"] .pet__inner { animation: bob var(--frame-dur, .36s) steps(1, end) infinite; }
+
+/* corsa: sobbalzo più alto, come una falcata */
+@keyframes gallop {
+  0%, 49% { transform: translateY(-1px); }
+  50%, 100% { transform: translateY(-8px); }
+}
+
+.pet[data-state="walk"][data-gait="run"] .pet__inner {
+  animation: gallop var(--frame-dur, .16s) steps(1, end) infinite;
+}
+
+/* scia della corsa: tre trattini dietro il cane, che scorrono all'indietro */
+.pet__trail {
+  position: absolute;
+  top: 34%;
+  bottom: 14%;
+  width: 46%;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pet[data-gait="run"][data-state="walk"] .pet__trail { display: flex; }
+.pet[data-facing="right"] .pet__trail { right: 100%; margin-right: 3%; align-items: flex-end; }
+.pet[data-facing="left"] .pet__trail { left: 100%; margin-left: 3%; align-items: flex-start; }
+
+.pet__trail i {
+  display: block;
+  height: 8%;
+  min-height: 2px;
+  max-height: 4px;
+  background: var(--cream);
+  animation: trailDash var(--frame-dur, .16s) steps(1, end) infinite;
+}
+
+.pet__trail i:nth-child(1) { width: 100%; opacity: .55; }
+.pet__trail i:nth-child(2) { width: 64%; opacity: .34; animation-delay: .04s; }
+.pet__trail i:nth-child(3) { width: 38%; opacity: .2; animation-delay: .08s; }
+
+@keyframes trailDash {
+  0%, 49% { transform: translateX(0); opacity: .5; }
+  50%, 100% { transform: translateX(-22%); opacity: .14; }
+}
 
 /* coccole */
 .pet[data-state="pet"] .pet__inner { animation: bob .8s steps(1, end) infinite; }

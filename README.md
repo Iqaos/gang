@@ -145,7 +145,12 @@ alternati, il corpo sobbalza di una cella, il cane salta a scatti.
 Ci sono **cinque pose disegnate**: in piedi (`.pose--stand`), i due frame della
 camminata (`.pose--walk-a`, `.pose--walk-b`), seduta (`.pose--sit`) e sdraiata
 (`.pose--lie`). Nel passo le zampe sono ridisegnate nei due frame, non traslate: è
-quello che rende leggibili le quattro zampe. Rocky si siede da solo se lo lasci tranquillo per un po' e,
+quello che rende leggibili le quattro zampe.
+
+Ci sono **tre andature**: passeggio (30 px/s), trotto (60 px/s) e corsa (108 px/s, con
+tre trattini di scia che scorrono dietro il cane). Il cane sceglie quella adatta alla
+distanza da percorrere e i due frame accelerano di conseguenza (`.42s`, `.26s`, `.16s`):
+le velocità e i tempi sono in `GAITS`, in `js/app.js`. Rocky si siede da solo se lo lasci tranquillo per un po' e,
 quando va a dormire, si stende con la testa sulle zampe. Gli stati sono in `data-state`
 su `.pet`: `idle`, `walk`, `sit`, `pet`, `eat`, `play`, `sleep`.
 

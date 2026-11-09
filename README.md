@@ -31,6 +31,18 @@ disabilitata, usa `npm.cmd` come sopra (o il Prompt dei comandi): funziona senza
 cambiare le impostazioni di sicurezza. Su macOS e Linux vanno bene
 `npm install && npm start`.
 
+Se compare `Electron failed to install correctly`, npm 11 o successivo ha bloccato lo
+script di postinstallazione di Electron e il binario non è stato scaricato. Rimedio,
+nella cartella del progetto:
+
+```powershell
+node node_modules\electron\install.js
+npm.cmd start
+```
+
+In alternativa approva lo script e reinstalla: `npm.cmd install-scripts approve electron`
+seguito da `npm.cmd install`.
+
 Serve [Node.js](https://nodejs.org) installato. La finestra si apre in basso al centro
 (380×240 px) e resta sopra le altre applicazioni; per chiuderla basta `Ctrl+C` nel
 terminale o chiudere la finestra. Dimensioni e posizione si cambiano con `WIDTH`,

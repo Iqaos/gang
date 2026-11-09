@@ -27,4 +27,14 @@ if not exist "node_modules\electron" (
   )
 )
 
+rem npm 11+ blocca gli script di postinstall: se il binario manca lo scarichiamo qui
+if not exist "node_modules\electron\path.txt" (
+  if exist "node_modules\electron\install.js" (
+    echo.
+    echo Scarico il binario di Electron...
+    echo.
+    node "node_modules\electron\install.js"
+  )
+)
+
 call npm.cmd start

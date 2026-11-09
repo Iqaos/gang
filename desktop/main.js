@@ -1,34 +1,42 @@
 /* ==========================================================================
    Rocky — finestra desktop
-   Apre la pagina in una finestra trasparente, senza bordi e sempre in primo
-   piano, appoggiata subito sopra la barra delle applicazioni.
+   Finestra trasparente, senza bordi, sempre in primo piano, appoggiata
+   DENTRO la barra delle applicazioni: il cane occupa gli ultimi pixel in
+   basso, il resto della finestra è trasparente e lascia passare i clic.
    Avvio:  npm install && npm start
    ========================================================================== */
 
 const path = require('node:path');
-const { app, BrowserWindow, screen, Menu } = require('electron');
+const { app, BrowserWindow, screen, Menu, ipcMain } = require('electron');
 
-const WIDTH = 380;
-const HEIGHT = 240;
+/* Larghezza pensata per il menu a riga singola; altezza per cane (80×48),
+   menu (una riga) e pannello impostazioni compatto. */
+const WIDTH = 320;
+const HEIGHT = 176;
 
 function createWindow() {
-  const { workArea } = screen.getPrimaryDisplay();
+  // `bounds` comprende la barra delle applicazioni, `workArea` no:
+  // così il fondo della finestra coincide con il fondo dello schermo.
+  const { bounds } = screen.getPrimaryDisplay();
 
   const win = new BrowserWindow({
     width: WIDTH,
     height: HEIGHT,
-    x: workArea.x + Math.round((workArea.width - WIDTH) / 2),
-    y: workArea.y + workArea.height - HEIGHT,
+    x: bounds.x + Math.round((bounds.width - WIDTH) / 2),
+    y: bounds.y + bounds.height - HEIGHT,
     transparent: true,
     backgroundColor: '#00000000',
     frame: false,
     hasShadow: false,
     resizable: false,
     maximizable: false,
+    minimizable: false,
     fullscreenable: false,
     alwaysOnTop: true,
     skipTaskbar: false,
+    title: 'Rocky',
     webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
     },
@@ -40,6 +48,14 @@ function createWindow() {
 
   // il menu è quello disegnato dalla pagina (tasto destro sul cane)
   Menu.setApplicationMenu(null);
+
+  // La pagina avvisa quando il puntatore è sul cane: solo lì la finestra
+  // riceve i clic, altrove è come se non ci fosse.
+  ipcMain.on('rocky:interactive', (event, inside) => {
+    const target = BrowserWindow.fromWebContents(event.sender);
+    if (!target || target.isDestroyed()) return;
+    target.setIgnoreMouseEvents(!inside, { forward: true });
+  });
 
   win.loadFile(path.join(__dirname, '..', 'index.html'), { query: { dock: '1' } });
 

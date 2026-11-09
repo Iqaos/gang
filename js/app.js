@@ -322,6 +322,11 @@ function clampX(x) {
 }
 
 function placeX(x, animate = false) {
+  if (isDocked) {
+    // sulla barra resta fermo al centro: niente vagabondaggio
+    el.pet.style.setProperty('--x', '0px');
+    return;
+  }
   posX = clampX(x);
   if (!animate) el.pet.style.setProperty('--walk-dur', '0ms');
   el.pet.style.setProperty('--x', `${posX}px`);
@@ -358,7 +363,7 @@ function walkTo(target, onArrive) {
 }
 
 function wander() {
-  if (busy || state.asleep || walking) return;
+  if (isDocked || busy || state.asleep || walking) return;
   updateMargin();
   const max = Math.max(margin, el.scene.clientWidth - el.pet.offsetWidth - margin);
   walkTo(margin + Math.random() * (max - margin));
@@ -366,6 +371,7 @@ function wander() {
 
 function scheduleWander() {
   clearTimeout(wanderTimer);
+  if (isDocked) return; // sulla barra non vaga: resta al suo posto
   wanderTimer = setTimeout(() => {
     if (!state.asleep && !busy && el.sheet.hidden) {
       const idleFor = Date.now() - lastAction;
@@ -537,6 +543,7 @@ function tick() {
    -------------------------------------------------------------------------- */
 
 function openSheet() {
+  closeMenu();
   el.nameInput.value = state.name;
   for (const input of el.coatInputs) input.checked = input.value === state.coat;
   el.sheet.hidden = false;
@@ -586,8 +593,19 @@ function openMenu(x, y) {
   syncMenu();
 
   const { width, height } = el.menu.getBoundingClientRect();
-  const left = Math.max(6, Math.min(x, window.innerWidth - width - 6));
-  const top = Math.max(6, Math.min(y, window.innerHeight - height - 6));
+  let left = x;
+  let top = y;
+
+  // Sulla barra il menu è una riga sola e si apre sopra il cane: la
+  // finestra è alta appena 176px e un menu verticale non ci starebbe.
+  if (isDocked) {
+    const box = dogBox();
+    left = box.x + box.w / 2 - width / 2;
+    top = box.y - height - 4;
+  }
+
+  left = Math.max(4, Math.min(left, window.innerWidth - width - 4));
+  top = Math.max(4, Math.min(top, window.innerHeight - height - 4));
 
   el.menu.style.left = `${left}px`;
   el.menu.style.top = `${top}px`;
@@ -710,6 +728,32 @@ document.addEventListener('visibilitychange', () => {
     renderStats();
   }
 });
+
+/* --------------------------------------------------------------------------
+   Finestra desktop: solo cane, menu e impostazioni catturano il mouse
+   -------------------------------------------------------------------------- */
+
+const shell = window.rockyShell;
+
+if (shell) {
+  let interactive = true;
+
+  const updatePointer = (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    const over = Boolean(target && target.closest('.pet, .menu, .sheet'));
+    if (over === interactive) return;
+    interactive = over;
+    shell.setInteractive(over);
+  };
+
+  document.addEventListener('pointermove', updatePointer, { passive: true });
+  document.addEventListener('pointerdown', updatePointer, { passive: true });
+  document.addEventListener('pointerleave', () => {
+    if (!interactive) return;
+    interactive = false;
+    shell.setInteractive(false);
+  });
+}
 
 window.addEventListener('pagehide', save);
 

@@ -12,8 +12,11 @@ Non servono dipendenze né build per la versione web: è HTML, CSS e JavaScript 
 
 ### 1. Sulla barra delle applicazioni (finestra desktop)
 
-È il modo per averlo davvero appoggiato sulla barra del sistema: una finestra
-trasparente, senza bordi, sempre in primo piano, posizionata subito sopra la barra.
+È il modo per averlo davvero **dentro** la barra del sistema: una finestra trasparente,
+senza bordi, sempre in primo piano, con il bordo inferiore a filo del fondo dello
+schermo. Il cane è alto 48 px e poggia lì, cioè dentro la barra delle applicazioni;
+il resto della finestra è trasparente e lascia passare i clic: sotto il puntatore
+rispondono solo il cane, il suo menu e il pannello impostazioni.
 
 **Windows, il modo più semplice:** scarica lo ZIP (**Code → Download ZIP**), **estrailo**
 e fai doppio clic su `avvia-rocky.bat`: la prima volta installa le dipendenze da solo,
@@ -43,10 +46,11 @@ npm.cmd start
 In alternativa approva lo script e reinstalla: `npm.cmd install-scripts approve electron`
 seguito da `npm.cmd install`.
 
-Serve [Node.js](https://nodejs.org) installato. La finestra si apre in basso al centro
-(380×240 px) e resta sopra le altre applicazioni; per chiuderla basta `Ctrl+C` nel
-terminale o chiudere la finestra. Dimensioni e posizione si cambiano con `WIDTH`,
-`HEIGHT` e il calcolo di `x`/`y` in `desktop/main.js`.
+Serve [Node.js](https://nodejs.org) installato. La finestra è di **320×176 px**, si apre
+in basso al centro e resta sopra le altre applicazioni; si chiude con `Ctrl+C` nel
+terminale o con `Alt+F4`. Dimensioni e posizione si cambiano con `WIDTH`, `HEIGHT` e il
+calcolo di `x`/`y` in `desktop/main.js`: con `bounds` la finestra comprende la barra (è
+la posizione predefinita, così il cane ci finisce dentro), con `workArea` resta sopra.
 
 ### 2. Nel browser
 
@@ -81,23 +85,29 @@ index.html        struttura della pagina e barra delle statistiche
 css/styles.css    interfaccia retro (bordi spessi, monospace) e animazioni a scatti
 js/sprite.js      il cane: sprite generato da una griglia di pixel
 js/app.js         stato, decadimento statistiche, salvataggio, menu, interazioni
-desktop/main.js   finestra Electron trasparente sulla barra di sistema
+desktop/main.js   finestra Electron trasparente dentro la barra di sistema
+desktop/preload.js  ponte che rende click-through le zone trasparenti
 ```
 
 ### Lo sprite
 
-Rocky è disegnato su una griglia di **48×32 celle da 5 px** (viewBox 240×160). In
-`js/sprite.js` il disegno è composto con tre primitive — `box`, `oval` e `thickPath` —
-e ogni cella viene poi convertita in un `<rect>` (le righe di pixel uguali diventano un
-solo rettangolo, così i nodi sono ~130 invece di migliaia). Niente curve: solo blocchi,
-con `shape-rendering: crispEdges` per tenerli netti.
+Rocky è disegnato su una griglia di **40×24 celle da 4 px** (viewBox 160×96). In
+`js/sprite.js` il disegno è composto con quattro primitive — `box`, `oval`, `rowSpans`
+(il tronco riga per riga, così la schiena è dritta e la pancia incavata) e `thickPath`
+— e ogni cella diventa un `<rect>` (le righe di pixel uguali si fondono in un solo
+rettangolo). Niente curve: solo blocchi, con `shape-rendering: crispEdges`.
+
+Lo sprite è mostrato a **2 px per pixel** nella finestra sulla barra (cane di 80×48) e
+a 5 px nel browser (200×120): solo scale intere, così i pixel restano quadrati.
 
 Le parti sono gruppi separati (`.tail`, `.leg--near-hind`, `.head`, `.eye-open`,
 `.tongue`…) e si animano per scatti, come nei giochi anni '80: la coda ha due frame
-alternati, le zampe si spostano di una cella, il cane salta a scatti.
+alternati, il corpo sobbalza di una cella, il cane salta a scatti.
 
-Ci sono **tre pose disegnate**: in piedi (`.pose--stand`), seduta (`.pose--sit`) e
-sdraiata (`.pose--lie`). Rocky si siede da solo se lo lasci tranquillo per un po' e,
+Ci sono **cinque pose disegnate**: in piedi (`.pose--stand`), i due frame della
+camminata (`.pose--walk-a`, `.pose--walk-b`), seduta (`.pose--sit`) e sdraiata
+(`.pose--lie`). Nel passo le zampe sono ridisegnate nei due frame, non traslate: è
+quello che rende leggibili le quattro zampe. Rocky si siede da solo se lo lasci tranquillo per un po' e,
 quando va a dormire, si stende con la testa sulle zampe. Gli stati sono in `data-state`
 su `.pet`: `idle`, `walk`, `sit`, `pet`, `eat`, `play`, `sleep`.
 
@@ -124,6 +134,10 @@ in `js/app.js`.
 
 - Il progetto rispetta `prefers-reduced-motion`: con le animazioni ridotte il cane resta
   fermo ma tutte le funzioni rimangono.
+- Nella finestra desktop le zone trasparenti sono trasparenti anche al mouse:
+  `desktop/preload.js` avvisa il processo principale quando il puntatore è sul cane, sul
+  menu o sul pannello, e solo lì la finestra cattura i clic. Senza preload (per esempio
+  aprendo la pagina nel browser) non cambia nulla.
 - La finestra Electron è trasparente e `alwaysOnTop`: su Windows può comparire sopra
   schermate intere se il sistema lo consente; su macOS richiede il permesso di
   accessibilità solo se in futuro si vorrà il click-through delle aree vuote.

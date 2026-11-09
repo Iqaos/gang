@@ -2,8 +2,9 @@
    Rocky — sprite a pixel (stile 8/16 bit)
    Griglia 40×24 blocchi da 4px (viewBox 160×96): cinque pose disegnate cella
    per cella — in piedi, due frame di camminata, seduto e sdraiato.
-   Testa grossa da cucciolo, orecchio pesante, muso bianco e quattro zampe
-   separate: si deve capire subito che è un cane.
+   Testa grossa da cucciolo, orecchio pendente, fiamma bianca che continua nel
+   muso, coda con punta bianca, zampe tozze con calzino focato: deve leggersi
+   subito come un bovaro del Bernese, anche a 80px dentro la barra.
    ========================================================================== */
 
 (function () {
@@ -12,7 +13,7 @@
   const COLS = 40;
   const ROWS = 24;
   const CELL = 4;
-  const GROUND = 23; // ultima riga: le zampe poggiano qui
+  const GROUND = 23; // riga dell'ombra: le zampe poggiano sulla 22
 
   /* Ogni lettera è un colore del mantello, preso dalle variabili CSS. */
   const COLORS = {
@@ -20,12 +21,12 @@
     K: 'var(--coat-dark)', // nero in ombra / zampe dietro / orecchio
     w: 'var(--cream)',     // bianco
     t: 'var(--tan)',       // focatura
-    n: 'var(--nose)',      // naso e occhi
+    n: 'var(--nose)',      // naso, bocca e pupilla
     r: '#d8433b',          // collare
     y: '#f5c542',          // medaglietta
     p: '#ef6f8f',          // lingua
-    e: '#8a839c',          // palpebra chiusa
-    s: '#000000',          // ombra a terra
+    e: '#a9a1b8',          // palpebra chiusa
+    s: 'rgba(8, 6, 14, .45)', // ombra a terra
   };
 
   const PARTS = [
@@ -43,51 +44,18 @@
     return parts;
   }
 
-  function put(parts, part, x, y, ch) {
-    const grid = parts[part];
-    const cx = Math.round(x);
-    const cy = Math.round(y);
-    if (!grid || cx < 0 || cy < 0 || cx >= COLS || cy >= ROWS) return;
-    grid[cy][cx] = ch;
-  }
-
-  function box(parts, part, x, y, w, h, ch) {
-    for (let j = 0; j < h; j += 1) {
-      for (let i = 0; i < w; i += 1) put(parts, part, x + i, y + j, ch);
+  /* Un blocco di pixel: [riga, prima colonna, ultima colonna, colore]. */
+  function rect(p, part, y, x0, x1, ch) {
+    const grid = p[part];
+    if (!grid) return;
+    for (let x = x0; x <= x1; x += 1) {
+      if (y < 0 || y >= ROWS || x < 0 || x >= COLS) continue;
+      grid[y][x] = ch;
     }
   }
 
-  /* Tronco riga per riga: [riga, prima colonna, ultima colonna]. */
-  function rowSpans(parts, part, spans, ch) {
-    for (const [y, x0, x1] of spans) box(parts, part, x0, y, x1 - x0 + 1, 1, ch);
-  }
-
-  function oval(parts, part, cx, cy, rx, ry, ch) {
-    for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y += 1) {
-      for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x += 1) {
-        const dx = (x + 0.5 - cx) / rx;
-        const dy = (y + 0.5 - cy) / ry;
-        if (dx * dx + dy * dy <= 1) put(parts, part, x, y, ch);
-      }
-    }
-  }
-
-  /* Pennellata spessa: code e zampe restano attaccate al corpo. */
-  function stamp(parts, part, x, y, size, ch) {
-    const half = Math.floor(size / 2);
-    box(parts, part, Math.round(x) - half, Math.round(y) - half, size, size, ch);
-  }
-
-  function thickPath(parts, part, points, size, ch) {
-    for (let i = 0; i < points.length - 1; i += 1) {
-      const [x0, y0] = points[i];
-      const [x1, y1] = points[i + 1];
-      const steps = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1) * 3;
-      for (let s = 0; s <= steps; s += 1) {
-        const t = s / steps;
-        stamp(parts, part, x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, size, ch);
-      }
-    }
+  function blocks(p, part, list) {
+    for (const [y, x0, x1, ch] of list) rect(p, part, y, x0, x1, ch);
   }
 
   /* Righe di pixel uguali diventano un solo rettangolo: meno nodi nel DOM. */
@@ -111,200 +79,251 @@
   }
 
   /* --------------------------------------------------------------------------
-     Testa: cranio tondo, orecchio pendente, muso bianco, occhio a due pixel
-     (hx, hy) è il centro del cranio.
+     Testa: cranio tondo, orecchio pesante dietro la guancia, fiamma bianca dal
+     cocuzzolo al muso, occhio bianco con pupilla scura, naso nero sul davanti.
+     Le coordinate sono relative al centro del cranio (hx, hy).
      -------------------------------------------------------------------------- */
+
+  const HEAD_SPANS = [
+    // [dy, dx0, dx1, colore]
+    [-5, -3, 2, 'k'],   // cocuzzolo
+    [-4, -5, 4, 'k'],
+    [-3, -7, 5, 'k'],
+    [-2, -7, 5, 'k'],
+    [-1, -7, 6, 'k'],
+    [0, -7, 6, 'k'],
+    [1, -6, 7, 'k'],    // guancia verso il muso
+    [2, -5, 5, 'k'],
+    [3, -4, 3, 'k'],    // sotto la gola
+  ];
 
   function drawHead(p, hx, hy) {
-    oval(p, 'head', hx, hy, 4.5, 4.5, 'k');          // cranio
-    oval(p, 'head', hx - 4, hy + 1.5, 2, 3.8, 'K');  // orecchio pesante
-    box(p, 'head', hx + 1, hy - 4, 2, 3, 'w');       // fiamma bianca
-    box(p, 'head', hx - 1, hy - 3, 2, 1, 't');       // sopracciglio focato
-    box(p, 'head', hx - 1, hy + 3, 1, 1, 't');       // guancia focata
-    oval(p, 'head', hx + 5, hy + 2, 2.8, 2, 'w');    // muso bianco
-    box(p, 'head', hx + 6, hy + 1, 2, 2, 'n');       // naso
-    box(p, 'head', hx + 5, hy + 3, 1, 1, 'n');       // bocca
-
-    box(p, 'eye', hx, hy - 1, 1, 2, 'n');            // occhio
-    box(p, 'eye-closed', hx - 1, hy, 2, 1, 'e');     // palpebra chiusa
-    box(p, 'tongue', hx + 4, hy + 4, 2, 2, 'p');
-  }
-
-  /* Zampa vista di fianco: due colonne, focatura sul ginocchio, zampa bianca. */
-  function drawLeg(p, part, x, top, lift, dark) {
-    const base = GROUND - lift;
-    const head = top - lift;
-    box(p, part, x, head, 2, base - head + 1, dark ? 'K' : 'k');
-    if (dark) {
-      box(p, part, x - 1, base, 4, 1, 'K');
-    } else {
-      if (lift === 0) box(p, part, x, base - 3, 2, 2, 't');
-      box(p, part, x - 1, base, 4, 1, 'w');
+    for (const [dy, dx0, dx1, ch] of HEAD_SPANS) {
+      rect(p, 'head', hy + dy, hx + dx0, hx + dx1, ch);
     }
+
+    // orecchio pesante che pende dietro la guancia
+    blocks(p, 'head', [
+      [hy - 3, hx - 7, hx - 5, 'K'],
+      [hy - 2, hx - 7, hx - 5, 'K'],
+      [hy - 1, hx - 7, hx - 5, 'K'],
+      [hy, hx - 7, hx - 5, 'K'],
+      [hy + 1, hx - 7, hx - 5, 'K'],
+      [hy + 2, hx - 7, hx - 5, 'K'],
+      [hy + 3, hx - 7, hx - 5, 'K'],
+      [hy + 4, hx - 7, hx - 6, 'K'],
+    ]);
+
+    // fiamma bianca: dal cocuzzolo scende e si allarga nel muso
+    blocks(p, 'head', [
+      [hy - 5, hx, hx + 1, 'w'],
+      [hy - 4, hx, hx + 1, 'w'],
+      [hy - 3, hx, hx + 1, 'w'],
+      [hy - 2, hx, hx + 1, 'w'],
+      [hy - 1, hx, hx + 1, 'w'],
+      [hy, hx, hx + 1, 'w'],
+      [hy + 1, hx, hx + 1, 'w'],
+    ]);
+
+    // muso bianco con naso nero all'insù
+    blocks(p, 'head', [
+      [hy + 1, hx + 2, hx + 7, 'w'],
+      [hy + 2, hx + 2, hx + 6, 'w'],
+      [hy + 3, hx + 1, hx + 5, 'w'],
+      [hy + 1, hx + 6, hx + 7, 'n'],
+      [hy + 2, hx + 6, hx + 7, 'n'],
+      [hy + 3, hx + 4, hx + 4, 'n'],
+    ]);
+
+    // focatura sopra l'occhio
+    rect(p, 'head', hy - 4, hx - 1, hx - 1, 't');
+
+    // occhio: bianco con pupilla scura, così si vede anche sul manto nero
+    blocks(p, 'eye', [
+      [hy - 3, hx - 3, hx - 2, 'w'],
+      [hy - 2, hx - 3, hx - 2, 'w'],
+      [hy - 2, hx - 2, hx - 2, 'n'],
+      [hy - 1, hx - 3, hx - 2, 'w'],
+    ]);
+
+    // palpebra chiusa
+    rect(p, 'eye-closed', hy - 2, hx - 3, hx - 2, 'e');
+
+    // lingua che pende sotto il muso
+    blocks(p, 'tongue', [
+      [hy + 4, hx + 2, hx + 3, 'p'],
+      [hy + 5, hx + 2, hx + 3, 'p'],
+    ]);
   }
 
   /* --------------------------------------------------------------------------
-     Posa in piedi (e i due frame della camminata)
-     phase 0 = fermo, 1 e 2 = zampe alternate
+     Posizioni dei pezzi comuni. Ogni posa è una lista di blocchi: prima quello
+     che sta dietro (ombra, coda, zampe lontane), poi corpo, zampe vicine e testa.
      -------------------------------------------------------------------------- */
 
-  const WALK = {
-    0: { farHind: 0, nearHind: 0, farFront: 0, nearFront: 0 },
-    1: { farHind: 2, nearHind: 0, farFront: 0, nearFront: 2 },
-    2: { farHind: 0, nearHind: 2, farFront: 2, nearFront: 0 },
+  const POSE = {
+    stand: {
+      head: [31, 7],
+      shadow: [[GROUND, 7, 29, 's']],
+      tail: {
+        a: [[14, 8, 10, 'k'], [13, 7, 9, 'k'], [12, 5, 8, 'k'], [11, 4, 6, 'k'], [10, 4, 6, 'k'], [9, 4, 5, 'k'], [8, 3, 5, 'w'], [9, 3, 3, 'w']],
+        b: [[14, 8, 10, 'k'], [13, 7, 9, 'k'], [12, 6, 8, 'k'], [11, 6, 8, 'k'], [10, 7, 9, 'k'], [9, 7, 8, 'k'], [8, 7, 9, 'w'], [9, 9, 9, 'w']],
+      },
+      far: [
+        [16, 14, 15, 'K'], [17, 14, 15, 'K'], [18, 14, 15, 'K'], [19, 14, 15, 'K'], [20, 14, 15, 'K'], [21, 14, 15, 'K'], [22, 13, 15, 'K'],
+        [16, 19, 20, 'K'], [17, 19, 20, 'K'], [18, 19, 20, 'K'], [19, 19, 20, 'K'], [20, 19, 20, 'K'], [21, 19, 20, 'K'], [22, 19, 21, 'K'],
+      ],
+      body: [
+        [10, 22, 29, 'k'],
+        [11, 16, 29, 'k'],
+        [12, 13, 29, 'k'],
+        [13, 11, 28, 'k'],
+        [14, 9, 27, 'k'],
+        [15, 8, 26, 'k'],
+        [16, 9, 25, 'k'],
+        [17, 10, 24, 'k'],
+        // petto bianco
+        [12, 23, 27, 'w'], [13, 23, 27, 'w'], [14, 22, 26, 'w'], [15, 22, 25, 'w'], [16, 22, 24, 'w'],
+        // collare e medaglietta
+        [11, 25, 28, 'r'], [12, 26, 26, 'y'],
+      ],
+      near: [
+        [18, 11, 12, 'k'], [19, 11, 12, 'k'], [20, 11, 12, 't'], [21, 11, 12, 'k'], [22, 10, 12, 'w'],
+        [18, 22, 23, 'k'], [19, 22, 23, 'k'], [20, 22, 23, 't'], [21, 22, 23, 'k'], [22, 21, 23, 'w'],
+      ],
+    },
+
+    'walk-a': {
+      head: [31, 7],
+      shadow: [[GROUND, 7, 29, 's']],
+      tail: { a: null, b: null }, // come stand
+      far: [
+        [16, 14, 15, 'K'], [17, 14, 15, 'K'], [18, 14, 15, 'K'], [19, 14, 15, 'K'], [20, 13, 15, 'K'],
+        [16, 19, 20, 'K'], [17, 19, 20, 'K'], [18, 19, 20, 'K'], [19, 19, 20, 'K'], [20, 19, 20, 'K'], [21, 19, 20, 'K'], [22, 19, 21, 'K'],
+      ],
+      near: [
+        [18, 11, 12, 'k'], [19, 11, 12, 'k'], [20, 11, 12, 't'], [21, 11, 12, 'k'], [22, 10, 12, 'w'],
+        [17, 22, 23, 'k'], [18, 22, 23, 't'], [19, 22, 23, 'k'], [20, 21, 23, 'w'],
+      ],
+    },
+
+    'walk-b': {
+      head: [31, 7],
+      shadow: [[GROUND, 7, 29, 's']],
+      tail: { a: null, b: null },
+      far: [
+        [16, 14, 15, 'K'], [17, 14, 15, 'K'], [18, 14, 15, 'K'], [19, 14, 15, 'K'], [20, 14, 15, 'K'], [21, 14, 15, 'K'], [22, 13, 15, 'K'],
+        [16, 19, 20, 'K'], [17, 19, 20, 'K'], [18, 19, 20, 'K'], [19, 19, 20, 'K'], [20, 19, 21, 'K'],
+      ],
+      near: [
+        [17, 11, 12, 'k'], [18, 11, 12, 't'], [19, 11, 12, 'k'], [20, 10, 12, 'w'],
+        [18, 22, 23, 'k'], [19, 22, 23, 'k'], [20, 22, 23, 't'], [21, 22, 23, 'k'], [22, 21, 23, 'w'],
+      ],
+    },
+
+    sit: {
+      head: [31, 8],
+      shadow: [[GROUND, 5, 27, 's']],
+      tail: {
+        a: [[21, 6, 9, 'k'], [22, 3, 9, 'k'], [21, 3, 5, 'k'], [21, 3, 4, 'w'], [22, 3, 4, 'w']],
+        b: [[22, 6, 9, 'k'], [22, 3, 9, 'k'], [21, 3, 5, 'k'], [21, 3, 4, 'w'], [22, 3, 4, 'w']],
+      },
+      far: [
+        [17, 24, 25, 'K'], [18, 24, 25, 'K'], [19, 24, 25, 'K'], [20, 24, 25, 'K'], [21, 24, 25, 'K'], [22, 24, 26, 'K'],
+      ],
+      body: [
+        [12, 24, 28, 'k'],
+        [13, 20, 28, 'k'],
+        [14, 17, 27, 'k'],
+        [15, 15, 26, 'k'],
+        [16, 13, 25, 'k'],
+        [17, 11, 18, 'k'], [17, 21, 24, 'k'],
+        [18, 10, 17, 'k'], [18, 21, 23, 'k'],
+        [19, 9, 17, 'k'], [19, 21, 23, 'k'],
+        [20, 9, 17, 'k'], [20, 21, 23, 'k'],
+        [21, 8, 17, 'k'], [21, 21, 23, 'k'],
+        // petto bianco
+        [13, 24, 27, 'w'], [14, 23, 26, 'w'], [15, 23, 25, 'w'], [16, 23, 24, 'w'],
+        // collare e medaglietta
+        [12, 25, 28, 'r'], [13, 26, 26, 'y'],
+      ],
+      near: [
+        [17, 21, 22, 'k'], [18, 21, 22, 'k'], [19, 21, 22, 't'], [20, 21, 22, 'k'], [21, 21, 22, 'k'], [22, 20, 22, 'w'],
+        // zampa posteriore piegata sotto la groppa
+        [21, 12, 16, 'k'], [22, 9, 12, 'w'],
+      ],
+    },
+
+    lie: {
+      head: [30, 15],
+      shadow: [[GROUND, 4, 30, 's']],
+      tail: {
+        a: [[19, 5, 8, 'k'], [20, 4, 9, 'k'], [21, 4, 9, 'k'], [19, 4, 5, 'w'], [20, 4, 5, 'w']],
+        b: [[20, 5, 8, 'k'], [21, 4, 9, 'k'], [20, 4, 9, 'k'], [20, 4, 5, 'w'], [21, 4, 5, 'w']],
+      },
+      far: [],
+      body: [
+        [16, 14, 26, 'k'],
+        [17, 11, 26, 'k'],
+        [18, 9, 26, 'k'],
+        [19, 8, 26, 'k'],
+        [20, 8, 25, 'k'],
+        [21, 8, 24, 'k'],
+        // petto bianco sotto la testa
+        [19, 23, 26, 'w'], [20, 22, 25, 'w'],
+        [17, 23, 25, 'r'],
+      ],
+      near: [
+        // zampe anteriori distese in avanti
+        [20, 27, 32, 'k'], [21, 27, 33, 'k'], [21, 33, 35, 'w'],
+        [19, 11, 13, 'k'], [20, 11, 12, 't'], [21, 10, 13, 'k'], [22, 10, 12, 'w'],
+      ],
+    },
   };
 
-  const BODY_STAND = [
-    [10, 14, 24],  // schiena
-    [11, 12, 26],
-    [12, 11, 27],
-    [13, 10, 27],
-    [14, 9, 27],   // groppa piena
-    [15, 9, 27],
-    [16, 10, 26],
-    [17, 11, 14],  // pancia incavata: sotto si vede il pavimento
-    [17, 21, 25],
-    [18, 12, 14],
-    [18, 21, 25],
-  ];
-
-  function composeStand(phase) {
+  function composeStand(name) {
+    const spec = POSE[name];
+    const stand = POSE.stand;
     const p = blankParts();
-    const step = WALK[phase] || WALK[0];
 
-    oval(p, 'shadow', 17, GROUND + 0.5, 13, 0.9, 's');
-
-    // coda folta in due frame, attaccata alla groppa e fuori dal corpo
-    thickPath(p, 'tail-a', [[9, 14], [6, 13], [4, 9]], 3, 'k');
-    stamp(p, 'tail-a', 5, 11, 4, 'k');
-    box(p, 'tail-a', 3, 7, 2, 3, 'w');
-    thickPath(p, 'tail-b', [[9, 14], [7, 13], [5, 9]], 3, 'k');
-    stamp(p, 'tail-b', 6, 11, 4, 'k');
-    box(p, 'tail-b', 4, 7, 2, 3, 'w');
-
-    // zampe lontane, in ombra
-    drawLeg(p, 'leg-far-hind', 8, 17, step.farHind, true);
-    drawLeg(p, 'leg-far-front', 21, 17, step.farFront, true);
-
-    rowSpans(p, 'body', BODY_STAND, 'k');
-    box(p, 'body', 25, 8, 4, 5, 'k');   // collo che sale verso la testa
-
-    // petto bianco, collare e medaglietta
-    rowSpans(p, 'body', [
-      [12, 26, 27],
-      [13, 26, 27],
-      [14, 25, 27],
-      [15, 25, 27],
-      [16, 24, 26],
-      [17, 24, 25],
-      [18, 22, 24],
-    ], 'w');
-    rowSpans(p, 'body', [[11, 25, 28]], 'r');
-    put(p, 'body', 26, 12, 'y');
-
-    // zampe vicine
-    drawLeg(p, 'leg-near-hind', 11, 17, step.nearHind, false);
-    drawLeg(p, 'leg-near-front', 24, 17, step.nearFront, false);
-
-    drawHead(p, 30, 7);
+    blocks(p, 'shadow', spec.shadow);
+    blocks(p, 'tail-a', spec.tail.a || stand.tail.a);
+    blocks(p, 'tail-b', spec.tail.b || stand.tail.b);
+    blocks(p, 'leg-far-hind', spec.far.slice(0, 7));
+    blocks(p, 'leg-far-front', spec.far.slice(7));
+    blocks(p, 'body', spec.body || stand.body);
+    blocks(p, 'leg-near-hind', spec.near.slice(0, 5));
+    blocks(p, 'leg-near-front', spec.near.slice(5));
+    drawHead(p, spec.head[0], spec.head[1]);
     return p;
   }
-
-  /* --------------------------------------------------------------------------
-     Posa seduta: groppa a terra, schiena inclinata, zampe davanti dritte.
-     Fra la groppa e le zampe anteriori resta uno spazio vuoto: è quello che
-     fa leggere la posa come "seduto" invece che come un mucchio.
-     -------------------------------------------------------------------------- */
-
-  const SIT_BACK = [
-    [10, 20, 24],
-    [11, 18, 25],
-    [12, 16, 25],
-    [13, 14, 26],
-    [14, 13, 26],
-    [15, 12, 26],
-  ];
 
   function composeSit() {
+    const spec = POSE.sit;
     const p = blankParts();
 
-    oval(p, 'shadow', 15, GROUND + 0.5, 12, 0.9, 's');
-
-    // coda distesa a terra
-    thickPath(p, 'tail-a', [[6, 22], [3, 22], [2, 19]], 3, 'k');
-    box(p, 'tail-a', 1, 18, 2, 2, 'w');
-    thickPath(p, 'tail-b', [[6, 22], [3, 22], [3, 20]], 3, 'k');
-    box(p, 'tail-b', 2, 19, 2, 2, 'w');
-
-    // groppa seduta, schiena inclinata, petto e collo
-    oval(p, 'body', 11, 18, 5.5, 5.5, 'k');
-    rowSpans(p, 'body', SIT_BACK, 'k');
-    box(p, 'body', 21, 9, 5, 11, 'k');
-    box(p, 'body', 23, 7, 4, 4, 'k');
-
-    // zampa posteriore piegata sotto la groppa
-    box(p, 'leg-near-hind', 13, 21, 5, 3, 'k');
-    box(p, 'leg-near-hind', 16, 22, 2, 2, 'w');
-
-    // petto bianco, collare e medaglietta
-    rowSpans(p, 'body', [
-      [12, 24, 25],
-      [13, 24, 25],
-      [14, 23, 25],
-      [15, 23, 25],
-      [16, 23, 25],
-      [17, 22, 24],
-      [18, 22, 24],
-    ], 'w');
-    rowSpans(p, 'body', [[10, 24, 26]], 'r');
-    put(p, 'body', 25, 11, 'y');
-
-    // zampe anteriori dritte, staccate dalla groppa
-    box(p, 'leg-far-front', 20, 15, 2, 9, 'K');
-    box(p, 'leg-far-front', 19, 23, 4, 1, 'K');
-    box(p, 'leg-near-front', 23, 15, 2, 9, 'k');
-    box(p, 'leg-near-front', 23, 20, 2, 2, 't');
-    box(p, 'leg-near-front', 22, 23, 4, 1, 'w');
-
-    drawHead(p, 28, 6);
+    blocks(p, 'shadow', spec.shadow);
+    blocks(p, 'tail-a', spec.tail.a);
+    blocks(p, 'tail-b', spec.tail.b);
+    blocks(p, 'leg-far-front', spec.far);
+    blocks(p, 'body', spec.body);
+    blocks(p, 'leg-near-front', spec.near.slice(0, 6));
+    blocks(p, 'leg-near-hind', spec.near.slice(6));
+    drawHead(p, spec.head[0], spec.head[1]);
     return p;
   }
 
-  /* --------------------------------------------------------------------------
-     Posa sdraiata: corpo disteso, testa sulle zampe, occhi chiusi
-     -------------------------------------------------------------------------- */
-
-  const BODY_LIE = [
-    [16, 13, 23],
-    [17, 10, 25],
-    [18, 8, 26],
-    [19, 7, 26],
-    [20, 7, 26],
-    [21, 8, 25],
-    [22, 10, 24],
-  ];
-
   function composeLie() {
+    const spec = POSE.lie;
     const p = blankParts();
 
-    oval(p, 'shadow', 16, GROUND + 0.5, 13, 0.9, 's');
-
-    // coda arrotolata accanto alla groppa
-    thickPath(p, 'tail-a', [[7, 22], [3, 21], [3, 18]], 3, 'k');
-    box(p, 'tail-a', 2, 17, 2, 2, 'w');
-    thickPath(p, 'tail-b', [[7, 22], [3, 22], [3, 19]], 3, 'k');
-    box(p, 'tail-b', 2, 18, 2, 2, 'w');
-
-    rowSpans(p, 'body', BODY_LIE, 'k');
-    box(p, 'body', 25, 18, 2, 3, 'k');  // spalle sotto la testa
-    box(p, 'body', 26, 21, 2, 1, 'w');  // petto bianco
-
-    // zampe anteriori distese in avanti
-    box(p, 'leg-far-front', 26, 22, 2, 2, 'K');
-    box(p, 'leg-near-front', 28, 21, 8, 3, 'k');
-    box(p, 'leg-near-front', 33, 22, 2, 2, 'w');
-
-    drawHead(p, 28, 16);
+    blocks(p, 'shadow', spec.shadow);
+    blocks(p, 'tail-a', spec.tail.a);
+    blocks(p, 'tail-b', spec.tail.b);
+    blocks(p, 'body', spec.body);
+    blocks(p, 'leg-near-front', spec.near.slice(0, 3));
+    blocks(p, 'leg-near-hind', spec.near.slice(3));
+    drawHead(p, spec.head[0], spec.head[1]);
     return p;
   }
 
@@ -335,9 +354,9 @@
 
   function buildDogSprite() {
     return [
-      poseMarkup('stand', composeStand(0)),
-      poseMarkup('walk-a', composeStand(1)),
-      poseMarkup('walk-b', composeStand(2)),
+      poseMarkup('stand', composeStand('stand')),
+      poseMarkup('walk-a', composeStand('walk-a')),
+      poseMarkup('walk-b', composeStand('walk-b')),
       poseMarkup('sit', composeSit()),
       poseMarkup('lie', composeLie()),
     ].join('');

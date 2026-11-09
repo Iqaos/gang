@@ -2,7 +2,8 @@
 
 Rocky è un cane da compagnia a pochi pixel, in stile 8/16 bit: nero focato con petto,
 muso e zampe bianchi, orecchie pendenti e coda folta. Vive appoggiato sulla barra e si
-comanda **con il tasto destro**: cibo, coccole, gioco, nanna e impostazioni.
+comanda **con un clic**: cibo, coccole, gioco, nanna e impostazioni, in un menu che non
+resta mai appeso (si chiude da solo dopo qualche secondo).
 
 Non servono dipendenze né build per la versione web: è HTML, CSS e JavaScript puri.
 
@@ -96,7 +97,7 @@ python3 -m http.server 3000
 Poi apri <http://localhost:3000>. Qui vedi anche la barra delle statistiche completa;
 aprendo `index.html?dock=1` ottieni la stessa vista trasparente della finestra desktop.
 
-## Comandi (tasto destro sul cane)
+## Comandi (clic sul cane)
 
 | Voce | Effetto |
 | --- | --- |
@@ -106,8 +107,10 @@ aprendo `index.html?dock=1` ottieni la stessa vista trasparente della finestra d
 | **Nanna** | rigenera energia mentre dorme; la voce diventa **Sveglia** |
 | **Impostazioni** | cambia nome e mantello (Bernese, cioccolato, grigio focato) |
 
-Un clic sinistro sul cane fa una coccola. Il menu si apre anche da tastiera: `Tab` fino
-al cane, poi `Shift+F10` (o il tasto menu); `Esc` chiude.
+Un clic sul cane apre il menu e un altro clic lo richiude; se non lo usi si chiude da
+solo dopo **6 secondi** (e il timer riparte se passi il mouse sui comandi). Il **doppio
+clic** fa una coccola. Il menu si apre anche da tastiera: `Tab` fino al cane, poi
+`Shift+F10` (o il tasto menu); `Esc` chiude.
 
 Le statistiche calano col tempo (cibo in ~15 minuti, felicità ~20, energia ~25), anche a
 finestra chiusa, e il cane se lo ricorda: tutto è salvato in `localStorage` sotto la

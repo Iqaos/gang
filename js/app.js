@@ -597,6 +597,16 @@ function saveSettings() {
    -------------------------------------------------------------------------- */
 
 let menuOpen = false;
+let menuTimer = 0;
+
+/* Il menu non resta appeso: si chiude da solo se non lo usi. */
+const MENU_AUTOCLOSE = 6000;
+
+function bumpMenuTimer() {
+  clearTimeout(menuTimer);
+  if (!menuOpen) return;
+  menuTimer = setTimeout(closeMenu, MENU_AUTOCLOSE);
+}
 
 function syncMenu() {
   for (const item of el.menuItems) {
@@ -633,9 +643,11 @@ function openMenu(x, y) {
   el.menu.style.left = `${left}px`;
   el.menu.style.top = `${top}px`;
   el.menu.focus();
+  bumpMenuTimer();
 }
 
 function closeMenu() {
+  clearTimeout(menuTimer);
   if (!menuOpen) return;
   menuOpen = false;
   el.menu.hidden = true;
@@ -661,8 +673,23 @@ for (const btn of el.actions) {
   btn.addEventListener('click', () => runAction(btn.dataset.action));
 }
 
+/* Un clic sul cane apre il menu delle azioni; un altro clic (o la chiusura
+   automatica dopo qualche secondo) lo richiude. Doppio clic: coccole. */
 el.hit.addEventListener('click', () => {
   lastAction = Date.now();
+
+  if (menuOpen) {
+    closeMenu();
+    return;
+  }
+
+  const rect = el.hit.getBoundingClientRect();
+  openMenu(rect.left + rect.width / 2, rect.top + rect.height * 0.6);
+});
+
+el.hit.addEventListener('dblclick', () => {
+  lastAction = Date.now();
+  closeMenu();
   cuddle();
 });
 
@@ -678,6 +705,9 @@ el.hit.addEventListener('keydown', (event) => {
     openMenu(rect.left + rect.width / 2, rect.top + rect.height * 0.6);
   }
 });
+
+el.menu.addEventListener('pointermove', bumpMenuTimer, { passive: true });
+el.menu.addEventListener('focusin', bumpMenuTimer);
 
 el.menu.addEventListener('click', (event) => {
   const item = event.target.closest('.menu__item');
@@ -705,7 +735,9 @@ el.menu.addEventListener('keydown', (event) => {
 });
 
 document.addEventListener('pointerdown', (event) => {
-  if (menuOpen && !el.menu.contains(event.target)) closeMenu();
+  if (!menuOpen) return;
+  if (el.menu.contains(event.target) || el.pet.contains(event.target)) return;
+  closeMenu();
 });
 el.btnSettings.addEventListener('click', openSheet);
 el.btnClose.addEventListener('click', closeSheet);

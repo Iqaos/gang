@@ -9,6 +9,10 @@ const STORAGE_KEY = 'rocky-pet-v1';
    trasparente, così il cane sta direttamente sopra la barra di sistema. */
 const isDocked = new URLSearchParams(window.location.search).has('dock');
 
+/* Sulla barra il cane passeggia fra il centro e il lato destro, fermandosi
+   prima della freccia "mostra desktop" in fondo alla barra. */
+const ARROW_MARGIN = 160;
+
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const clamp = (v, min = 0, max = 100) => Math.min(max, Math.max(min, v));
@@ -316,17 +320,26 @@ function updateMargin() {
   margin = Math.min(110, Math.max(20, el.scene.clientWidth * 0.12));
 }
 
+/* Zona di passeggio sulla barra: dal centro fin quasi alla freccia. */
+function dockRange() {
+  const width = el.scene.clientWidth;
+  const petWidth = el.pet.offsetWidth || 80;
+  const center = Math.round((width - petWidth) / 2);
+  const min = Math.max(0, Math.round(center - width * 0.12));
+  const max = Math.max(min, Math.round(width - petWidth - ARROW_MARGIN));
+  return { min, max, center };
+}
+
 function clampX(x) {
+  if (isDocked) {
+    const { min, max } = dockRange();
+    return Math.min(max, Math.max(min, x));
+  }
   const max = Math.max(margin, el.scene.clientWidth - el.pet.offsetWidth - margin);
   return Math.min(max, Math.max(margin, x));
 }
 
 function placeX(x, animate = false) {
-  if (isDocked) {
-    // sulla barra resta fermo al centro: niente vagabondaggio
-    el.pet.style.setProperty('--x', '0px');
-    return;
-  }
   posX = clampX(x);
   if (!animate) el.pet.style.setProperty('--walk-dur', '0ms');
   el.pet.style.setProperty('--x', `${posX}px`);
@@ -363,7 +376,7 @@ function walkTo(target, onArrive) {
 }
 
 function wander() {
-  if (isDocked || busy || state.asleep || walking) return;
+  if (busy || state.asleep || walking) return;
   updateMargin();
   const max = Math.max(margin, el.scene.clientWidth - el.pet.offsetWidth - margin);
   walkTo(margin + Math.random() * (max - margin));
@@ -371,7 +384,6 @@ function wander() {
 
 function scheduleWander() {
   clearTimeout(wanderTimer);
-  if (isDocked) return; // sulla barra non vaga: resta al suo posto
   wanderTimer = setTimeout(() => {
     if (!state.asleep && !busy && el.sheet.hidden) {
       const idleFor = Date.now() - lastAction;
@@ -766,7 +778,7 @@ function boot() {
   renderIdentity();
   renderStats();
   updateMargin();
-  placeX(state.x ?? margin, false);
+  placeX(state.x ?? (isDocked ? dockRange().center : margin), false);
   setPose(state.asleep ? 'sleep' : 'idle');
   syncButtons();
 

@@ -9,20 +9,21 @@
 const path = require('node:path');
 const { app, BrowserWindow, screen, Menu, ipcMain } = require('electron');
 
-/* Larghezza pensata per il menu a riga singola; altezza per cane (80×48),
-   menu (una riga) e pannello impostazioni compatto. */
-const WIDTH = 320;
+/* Altezza pensata per cane (80×48), menu (una riga) e pannello impostazioni
+   compatto; la larghezza è quella dello schermo, così il cane può passeggiare
+   lungo tutta la barra (e il resto della finestra è trasparente). */
 const HEIGHT = 176;
 
 function createWindow() {
   // `bounds` comprende la barra delle applicazioni, `workArea` no:
   // così il fondo della finestra coincide con il fondo dello schermo.
   const { bounds } = screen.getPrimaryDisplay();
+  const WIDTH = bounds.width;
 
   const win = new BrowserWindow({
     width: WIDTH,
     height: HEIGHT,
-    x: bounds.x + Math.round((bounds.width - WIDTH) / 2),
+    x: bounds.x,
     y: bounds.y + bounds.height - HEIGHT,
     transparent: true,
     backgroundColor: '#00000000',
@@ -42,9 +43,21 @@ function createWindow() {
     },
   });
 
-  // sopra a tutto, anche sopra la barra delle applicazioni
+  // Sopra a tutto, anche sopra la barra delle applicazioni. La barra però è a
+  // sua volta "sempre in primo piano": toccandola passerebbe davanti al cane,
+  // quindi rialziamo la finestra appena perde il fuoco (e ogni tanto), così
+  // resta incollata sopra la barra.
+  const raise = () => {
+    if (win.isDestroyed()) return;
+    win.setAlwaysOnTop(true, 'screen-saver');
+    win.moveTop();
+  };
+
   win.setAlwaysOnTop(true, 'screen-saver');
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  win.on('blur', raise);
+  const raiseTimer = setInterval(raise, 1500);
+  win.on('closed', () => clearInterval(raiseTimer));
 
   // il menu è quello disegnato dalla pagina (tasto destro sul cane)
   Menu.setApplicationMenu(null);

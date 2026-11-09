@@ -16,7 +16,9 @@ Non servono dipendenze né build per la versione web: è HTML, CSS e JavaScript 
 senza bordi, sempre in primo piano, con il bordo inferiore a filo del fondo dello
 schermo. Il cane è alto 48 px e poggia lì, cioè dentro la barra delle applicazioni;
 il resto della finestra è trasparente e lascia passare i clic: sotto il puntatore
-rispondono solo il cane, il suo menu e il pannello impostazioni.
+rispondono solo il cane, il suo menu e il pannello impostazioni. La finestra è larga
+quanto lo schermo, così il cane **passeggia lungo la barra**: parte dal centro, va a
+destra e a sinistra per un po' e si ferma prima della freccia «mostra desktop».
 
 **Windows, il modo più semplice:** scarica lo ZIP (**Code → Download ZIP**), **estrailo**
 e fai doppio clic su `avvia-rocky.bat`: la prima volta installa le dipendenze da solo,
@@ -46,8 +48,10 @@ npm.cmd start
 In alternativa approva lo script e reinstalla: `npm.cmd install-scripts approve electron`
 seguito da `npm.cmd install`.
 
-Serve [Node.js](https://nodejs.org) installato. La finestra è di **320×176 px**, si apre
-in basso al centro e resta sopra le altre applicazioni; si chiude con `Ctrl+C` nel
+Serve [Node.js](https://nodejs.org) installato. La finestra è larga quanto lo schermo e
+alta **176 px**, appoggiata sul fondo, e resta sopra le altre applicazioni (se tocchi la
+barra, la finestra si rialza da sola: `blur` e un timer richiamano `setAlwaysOnTop`);
+si chiude con `Ctrl+C` nel
 terminale o con `Alt+F4`. Dimensioni e posizione si cambiano con `WIDTH`, `HEIGHT` e il
 calcolo di `x`/`y` in `desktop/main.js`: con `bounds` la finestra comprende la barra (è
 la posizione predefinita, così il cane ci finisce dentro), con `workArea` resta sopra.

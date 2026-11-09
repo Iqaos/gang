@@ -790,10 +790,8 @@ body.is-docked .hint { display: none; }
    centrato in basso, cioè dentro la barra delle applicazioni. */
 body.is-docked .pet {
   width: 80px;
-  left: 50%;
-  margin-left: -40px;
-  transform: none;
-  transition: none;
+  left: 0;
+  transform: translateX(var(--x, 0px));
 }
 
 body.is-docked .fx__item { font-size: 10px; }

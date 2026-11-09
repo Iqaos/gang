@@ -15,10 +15,21 @@ Non servono dipendenze né build per la versione web: è HTML, CSS e JavaScript 
 È il modo per averlo davvero appoggiato sulla barra del sistema: una finestra
 trasparente, senza bordi, sempre in primo piano, posizionata subito sopra la barra.
 
-```bash
-npm install
-npm start
+**Windows, il modo più semplice:** scarica lo ZIP (**Code → Download ZIP**), **estrailo**
+e fai doppio clic su `avvia-rocky.bat`: la prima volta installa le dipendenze da solo,
+poi avvia Rocky.
+
+Da terminale (nella cartella del progetto):
+
+```powershell
+npm.cmd install
+npm.cmd start
 ```
+
+Se PowerShell rifiuta `npm` con l'errore su `npm.ps1` e l'esecuzione di script
+disabilitata, usa `npm.cmd` come sopra (o il Prompt dei comandi): funziona senza
+cambiare le impostazioni di sicurezza. Su macOS e Linux vanno bene
+`npm install && npm start`.
 
 Serve [Node.js](https://nodejs.org) installato. La finestra si apre in basso al centro
 (380×240 px) e resta sopra le altre applicazioni; per chiuderla basta `Ctrl+C` nel
